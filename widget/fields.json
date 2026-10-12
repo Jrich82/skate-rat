@@ -1,20 +1,26 @@
 {
   "tier1": {
     "type": "number",
-    "label": "Superchat/tip amount for a 360 FLIP",
+    "label": "Tier 1 amount: 360 FLIP / 360 grabs",
     "value": 5,
     "group": "Trick tiers"
   },
   "tier2": {
     "type": "number",
-    "label": "Amount for a 540 McTWIST",
+    "label": "Tier 2 amount: 540s & McTwist",
     "value": 20,
     "group": "Trick tiers"
   },
   "tier3": {
     "type": "number",
-    "label": "Amount for the MEGA 720",
+    "label": "Tier 3 amount: 720s (slow-mo)",
     "value": 50,
+    "group": "Trick tiers"
+  },
+  "tier4": {
+    "type": "number",
+    "label": "Tier 4 amount: THE 900 (slow-mo + confetti)",
+    "value": 100,
     "group": "Trick tiers"
   },
   "currency": {
@@ -26,40 +32,43 @@
   "memberTrick": {
     "type": "dropdown",
     "label": "New member trick",
-    "value": "kickflip",
+    "value": "t0",
     "group": "Trick tiers",
     "options": {
-      "ollie": "Air",
-      "kickflip": "Kickflip",
-      "treflip": "360 Flip",
-      "mctwist": "540 McTwist",
-      "mega": "Mega 720"
+      "grab": "Grab air (Indy, Melon\u2026)",
+      "t0": "Flip trick (kickflip, heelflip\u2026)",
+      "t1": "Tier 1 (360s)",
+      "t2": "Tier 2 (540s)",
+      "t3": "Tier 3 (720s)",
+      "t4": "Tier 4 (THE 900)"
     }
   },
   "subscriberTrick": {
     "type": "dropdown",
     "label": "New subscriber trick",
-    "value": "ollie",
+    "value": "grab",
     "group": "Trick tiers",
     "options": {
-      "ollie": "Air",
-      "kickflip": "Kickflip",
-      "treflip": "360 Flip",
-      "mctwist": "540 McTwist",
-      "mega": "Mega 720"
+      "grab": "Grab air (Indy, Melon\u2026)",
+      "t0": "Flip trick (kickflip, heelflip\u2026)",
+      "t1": "Tier 1 (360s)",
+      "t2": "Tier 2 (540s)",
+      "t3": "Tier 3 (720s)",
+      "t4": "Tier 4 (THE 900)"
     }
   },
   "followerTrick": {
     "type": "dropdown",
     "label": "New follower trick (Twitch/Kick)",
-    "value": "ollie",
+    "value": "grab",
     "group": "Trick tiers",
     "options": {
-      "ollie": "Air",
-      "kickflip": "Kickflip",
-      "treflip": "360 Flip",
-      "mctwist": "540 McTwist",
-      "mega": "Mega 720"
+      "grab": "Grab air (Indy, Melon\u2026)",
+      "t0": "Flip trick (kickflip, heelflip\u2026)",
+      "t1": "Tier 1 (360s)",
+      "t2": "Tier 2 (540s)",
+      "t3": "Tier 3 (720s)",
+      "t4": "Tier 4 (THE 900)"
     }
   },
   "chatCommand": {
@@ -112,6 +121,15 @@
     "type": "text",
     "label": "Text on the ramps",
     "value": "RATZ",
+    "group": "Halfpipe"
+  },
+  "hangTime": {
+    "type": "slider",
+    "label": "Hang time (%) \u2014 higher = slower, floatier airs",
+    "value": 100,
+    "min": 50,
+    "max": 200,
+    "step": 10,
     "group": "Halfpipe"
   },
   "size": {
@@ -178,7 +196,7 @@
   "bannerSeconds": {
     "type": "number",
     "label": "Banner time (seconds)",
-    "value": 5,
+    "value": 6,
     "group": "Look"
   },
   "sound": {
@@ -196,37 +214,43 @@
     "step": 1,
     "group": "Sound"
   },
-  "testOllie": {
+  "test_grab": {
     "type": "button",
-    "label": "Test: Ollie",
-    "value": "ollie",
+    "label": "Test: Grab air",
+    "value": "grab",
     "group": "Test"
   },
-  "testKickflip": {
+  "test_t0": {
     "type": "button",
-    "label": "Test: Kickflip",
-    "value": "kickflip",
+    "label": "Test: Flip trick",
+    "value": "t0",
     "group": "Test"
   },
-  "testTre": {
+  "test_t1": {
     "type": "button",
-    "label": "Test: 360 Flip",
-    "value": "treflip",
+    "label": "Test: Tier 1 (360s)",
+    "value": "t1",
     "group": "Test"
   },
-  "testMcTwist": {
+  "test_t2": {
     "type": "button",
-    "label": "Test: 540 McTwist",
-    "value": "mctwist",
+    "label": "Test: Tier 2 (540s)",
+    "value": "t2",
     "group": "Test"
   },
-  "testMega": {
+  "test_t3": {
     "type": "button",
-    "label": "Test: Mega backflip",
-    "value": "mega",
+    "label": "Test: Tier 3 (720s)",
+    "value": "t3",
     "group": "Test"
   },
-  "testBail": {
+  "test_t4": {
+    "type": "button",
+    "label": "Test: Tier 4 (900)",
+    "value": "t4",
+    "group": "Test"
+  },
+  "test_bail": {
     "type": "button",
     "label": "Test: Bail",
     "value": "bail",

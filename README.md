@@ -6,16 +6,19 @@ Built as a gift for [KillEatRatz](https://www.youtube.com/@killeatratz).
 
 ## Tricks
 
-| Event | Trick |
-|---|---|
-| Subscriber / follower | Air |
-| New member, or superchat under the first tier | Kickflip |
-| Tier 1 (default A$5+) | 360 Flip |
-| Tier 2 (default A$20+) | 540 McTwist |
-| Tier 3 (default A$50+) or a raid | MEGA 720 with confetti and a flash |
-| `!kickflip` in chat | Random trick, with a chance he bails |
+Bigger money gets a higher air and a harder trick. Each tier picks at random from its pool, so it doesn't repeat the same thing all stream.
 
-Tiers, tricks, the chat command, cooldown, bail chance, colors, ramp height and size are all settings in the widget. No code edits needed.
+| Event | Trick pool |
+|---|---|
+| Subscriber / follower | Grab airs: Indy, Melon, Stalefish, Mute, Japan |
+| New member, or superchat under tier 1 | Kickflip, Heelflip, Varial, Method Air |
+| Tier 1 (default A$5+) | 360 Flip, 360 Indy, 360 Mute, 360 Flip Indy |
+| Tier 2 (default A$20+) | 540 Melon, 540 McTwist, 360 Kickflip, Rocket Air |
+| Tier 3 (default A$50+) | 720 Stalefish, 720 Kickflip, 540 360 Flip, in slow motion |
+| Tier 4 (default A$100+) or a raid | THE 900, in slow motion with confetti |
+| `!kickflip` in chat | A random low-tier trick, with a chance he bails |
+
+At the peak of each air he rotates upright, so spins and flips read clearly. The 360s and 720s land fakie (riding backwards), and he switches around on the flat. A **Hang time** setting makes everything slower and floatier.
 
 ## Try it
 

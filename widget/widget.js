@@ -2,24 +2,52 @@
 // The rat waits on a deck at the edge of the screen. On a stream event he drops in,
 // rides the halfpipe and airs out of the far wall with a trick. More money = bigger air + bigger trick.
 let F = {
-  tier1: 5, tier2: 20, tier3: 50, currency: "$",
-  followerTrick: "ollie", subscriberTrick: "ollie", memberTrick: "kickflip",
+  tier1: 5, tier2: 20, tier3: 50, tier4: 100, currency: "$",
+  followerTrick: "grab", subscriberTrick: "grab", memberTrick: "t0",
   chatCommand: "!kickflip", chatCooldown: 30, bailChance: 15,
   idleMode: "perch", rampHeight: 220, rampOpacity: 85, rampText: "RATZ",
-  size: 100, accent: "#ff2bd6", accent2: "#27f5ff", ratColor: "#8a7b96",
+  hangTime: 100, size: 100, accent: "#ff2bd6", accent2: "#27f5ff", ratColor: "#8a7b96",
   ratImage: "", ratIdleImage: "", ratAirImage: "", boardImage: "",
-  showBanner: "yes", bannerSeconds: 5, sound: "", volume: 50
+  showBanner: "yes", bannerSeconds: 6, sound: "", volume: 50
 };
 
-// h = share of the available sky the air reaches
-const TRICKS = {
-  ollie:    { label: "AIR",          h: .30 },
-  kickflip: { label: "KICKFLIP",     h: .45 },
-  treflip:  { label: "360 FLIP",     h: .62 },
-  mctwist:  { label: "540 McTWIST",  h: .82 },
-  mega:     { label: "MEGA 720",     h: 1.0 },
-  bail:     { label: "BAIL!",        h: .45 }
+// ---------- trick catalog ----------
+// spin: body rotation in degrees (180 = a normal air turn). flip: board flips (y = kick/heel axis, x = shove-it axis).
+// grab: grab pose. invert: in-plane flip (McTwist). h: share of available sky. slowmo: hang at the peak.
+const GRABS = {
+  INDY:      { bx: 0,   by: -30, br: -6,  lean: 0 },
+  MELON:     { bx: 8,   by: -24, br: 18,  lean: 4 },
+  STALEFISH: { bx: -10, by: -26, br: -16, lean: -6 },
+  METHOD:    { bx: -34, by: -50, br: -40, lean: 14 },
+  MUTE:      { bx: 12,  by: -28, br: 10,  lean: 0 },
+  JAPAN:     { bx: 18,  by: -44, br: 36,  lean: -8 },
+  ROCKET:    { bx: 34,  by: -64, br: -78, lean: -4 }
 };
+const FLIPS = {
+  KICKFLIP: { y: 1, x: 0 }, HEELFLIP: { y: -1, x: 0 }, VARIAL: { y: 0, x: 1 },
+  "360 FLIP": { y: 1, x: 2 }, "DOUBLE KICKFLIP": { y: 2, x: 0 }
+};
+const T = (spin, flip, grab, h, extra = {}) => ({ spin, flip, grab, h, ...extra });
+const POOLS = {
+  grab: () => T(180, null, pick(["INDY", "MELON", "STALEFISH", "MUTE", "JAPAN"]), .40),
+  t0:   () => pick([T(180, "KICKFLIP", null, .45), T(180, "HEELFLIP", null, .45), T(180, null, "METHOD", .48), T(180, "VARIAL", null, .45)]),
+  t1:   () => pick([T(180, "360 FLIP", null, .55), T(360, null, "INDY", .58), T(360, null, "MUTE", .58), T(180, "360 FLIP", "INDY", .58)]),
+  t2:   () => pick([T(540, null, "MELON", .70), T(540, null, "MUTE", .72, { invert: 1, name: "540 McTWIST" }), T(360, "KICKFLIP", null, .68), T(180, null, "ROCKET", .66)]),
+  t3:   () => pick([T(720, null, "STALEFISH", .86, { slowmo: .7 }), T(720, "KICKFLIP", null, .86, { slowmo: .7 }), T(540, "360 FLIP", null, .84, { slowmo: .7 })]),
+  t4:   () => pick([T(900, null, null, 1, { slowmo: .5, mega: 1, name: "THE 900" }), T(900, null, "INDY", 1, { slowmo: .5, mega: 1 })]),
+  bail: () => T(180, "KICKFLIP", null, .45, { bail: 1 })
+};
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+function trickName(t) {
+  if (t.bail) return "BAIL!";
+  if (t.name) return t.name;
+  const parts = [];
+  if (t.spin > 180) parts.push(String(t.spin));
+  if (t.flip) parts.push(t.flip);
+  if (t.grab) parts.push(t.grab + (t.spin === 180 && !t.flip ? " AIR" : ""));
+  return parts.join(" ") || "AIR";
+}
+function makeTrick(key) { const t = (POOLS[key] || POOLS.t0)(); t.label = trickName(t); return t; }
 
 const lane = document.getElementById("lane");
 const rampsSvg = document.getElementById("ramps");
@@ -29,13 +57,13 @@ const rat = rider.querySelector(".rat");
 const board = rider.querySelector(".board");
 const banner = document.getElementById("banner");
 
-const G = 1250;          // gravity px/s²
 const BASE = 6;          // ground offset from bottom
+let G = 650;             // gravity px/s² (lower = floatier)
 let W = 0, Hh = 0, R = 200, D = 100, A = 0, FL = 0, L = 0;
 
 let mode = "perch";      // perch | drop | ride | air | home
 let side = -1;           // deck he's on (-1 left, 1 right)
-let u = 0, v = 0, dir = 1, dirS = 1;
+let u = 0, v = 0, dir = 1, dirS = 1, fakie = false;
 let air = null, tween = null;
 let pending = null, current = null, crashed = false, recoverAt = 0, goingHome = false;
 const queue = [];
@@ -48,6 +76,7 @@ function applyFields() {
   const r = document.documentElement.style;
   r.setProperty("--a", F.accent); r.setProperty("--b", F.accent2);
   r.setProperty("--rat", F.ratColor); r.setProperty("--s", S());
+  G = 650 * 100 / Math.max(40, F.hangTime);
   // custom art: transparent PNGs, side view, facing RIGHT
   const ride = F.ratImage || F.ratIdleImage || F.ratAirImage;
   if (ride) {
@@ -104,17 +133,50 @@ function place(x, y, rot, dS) {
   rider.style.transform =
     `translate(${x - 80}px, ${Hh - BASE - y - 150}px) rotate(${rot}deg) scaleX(${dS}) scale(${S()})`;
 }
+const clamp01 = k => Math.max(0, Math.min(1, k));
+const ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;      // ease-in-out
+const win = (k, a, b) => ease(clamp01((k - a) / (b - a)));                  // eased 0→1 between a and b
+const hold = (k, a, b, f = .12) => Math.min(win(k, a, a + f), 1 - win(k, b - f, b)); // 0→1→0 with plateau
+
+// pose of rider + board during the air, all driven by air progress k (0..1)
+function airPose(k) {
+  const t = air.trick, s = air.s;
+  const rot = -s * 90 * (1 - Math.sin(Math.PI * k));        // vertical on the wall → upright at the peak
+  const turn = t ? t.spin : 180;
+  const theta = turn * win(k, .14, .86) * Math.PI / 180;    // body spin around the vertical axis
+  const dS = s * Math.cos(theta);                            // seen from the side, a spin is a squash + mirror
+  let bT = "", sT = "";
+  if (t) {
+    const fl = t.flip && FLIPS[t.flip];
+    if (fl) {
+      const fk = win(k, .26, .66);
+      const ky = Math.cos(fk * Math.PI * 2 * Math.abs(fl.y)) || 1, kx = Math.cos(fk * Math.PI * 2 * fl.x * .5);
+      bT += ` translateY(${-14 * Math.sin(fk * Math.PI)}px) scale(${fl.x ? kx : 1}, ${fl.y ? ky : 1})`;
+    }
+    const g = t.grab && GRABS[t.grab];
+    if (g) {
+      const gk = hold(k, .22, .78);
+      bT = `translate(${g.bx * gk}px, ${g.by * gk}px) rotate(${g.br * gk}deg)` + bT;
+      sT += ` rotate(${g.lean * gk}deg)`;
+    }
+    if (t.invert) sT += ` rotate(${-360 * win(k, .3, .75)}deg)`;
+    if (t.bail) sT += ` rotate(${150 * win(k, .35, 1)}deg)`;
+  }
+  board.style.transform = bT;
+  spin.style.transform = sT;
+  return { rot, dS };
+}
 
 // ---------- main loop ----------
 function targetHeight() {
   if (crashed) return 0;
-  if (pending) return R + sky() * TRICKS[pending.trick].h;
+  if (pending) return R + sky() * pending.h;
   if (goingHome) return R + 26 * S();
   return F.idleMode === "ride" ? R * 0.5 : R * 0.3;
 }
 
 function frame(t) {
-  const dt = Math.min(0.033, (t - last) / 1000); last = t;
+  let dt = Math.min(0.033, (t - last) / 1000); last = t;
   if (mode === "perch") {
     place(perchX(side), R, 0, -side);
   } else if (mode === "drop" || mode === "home") {
@@ -129,17 +191,19 @@ function frame(t) {
     v += -G * p0.dy * dt;
     if (p0.dy === 0) {                                  // pump / brake on the flat
       const tgt = Math.sqrt(2 * G * targetHeight()), sp = Math.abs(v);
-      v = (v === 0 ? dir : Math.sign(v)) * (sp + (tgt - sp) * Math.min(1, dt * 6));
+      v = (v === 0 ? dir : Math.sign(v)) * (sp + (tgt - sp) * Math.min(1, dt * 5));
+      if (fakie && Math.abs(at(u).x - W / 2) < W * .15) fakie = false;   // switch back around mid-flat
     }
     u += v * dt;
     if (v > 1) dir = 1; else if (v < -1) dir = -1;
-    dirS += (dir - dirS) * Math.min(1, dt * 14);
+    const want = fakie ? -dir : dir;
+    dirS += (want - dirS) * Math.min(1, dt * (fakie ? 14 : 7));
     if (u >= L || u <= 0) {                             // reached a coping
       const s = u >= L ? 1 : -1; u = s > 0 ? L : 0;
       const vy = Math.abs(v);
       if (goingHome && !pending && !crashed) { goHome(s); requestAnimationFrame(frame); return; }
       if (vy < 40) v = -v * 0.5;
-      else { mode = "air"; air = { s, y: R, vy, t: 0, tot: 2 * vy / G }; startAir(); }
+      else { mode = "air"; air = { s, y: R, vy, t: 0, tot: 2 * vy / G, trick: null }; startAir(); }
     }
     if (crashed && p0.dy === 0 && Math.abs(v) < 12) {
       if (!recoverAt) recoverAt = t + 1300;
@@ -148,9 +212,13 @@ function frame(t) {
     if (mode === "ride") { const p = at(u); place(p.x, p.y, p.rot, dirS); }
   }
   if (mode === "air") {
+    let k = air.t / air.tot;
+    const slow = air.trick && air.trick.slowmo;
+    if (slow) dt *= 1 - (1 - slow) * Math.sin(Math.PI * clamp01(k));   // ease into slow motion at the peak
     air.t += dt; air.vy -= G * dt; air.y += air.vy * dt;
-    const k = air.t / air.tot, turn = Math.max(0, Math.min(1, (k - .38) / .24));
-    place(air.s > 0 ? W - D : D, air.y, air.s > 0 ? -90 : 90, air.s > 0 ? 1 - 2 * turn : -1 + 2 * turn);
+    k = clamp01(air.t / air.tot);
+    const p = airPose(k);
+    place(air.s > 0 ? W - D : D, air.y, p.rot, p.dS);
     if (air.vy < 0 && air.y <= R) land();
   }
   requestAnimationFrame(frame);
@@ -160,40 +228,42 @@ function frame(t) {
 function dropIn() {
   const s = side;
   mode = "drop";
-  tween = { t: 0, dur: .45, x0: perchX(s), x1: s < 0 ? D : W - D, y0: R, y1: R, arc: 6 * S(),
+  tween = { t: 0, dur: .55, x0: perchX(s), x1: s < 0 ? D : W - D, y0: R, y1: R, arc: 6 * S(),
     r0: 0, r1: s < 0 ? 90 : -90, d: -s,
-    done() { mode = "ride"; u = s < 0 ? 0.5 : L - 0.5; v = -s * 60; dir = -s; dirS = dir; } };
+    done() { mode = "ride"; u = s < 0 ? 0.5 : L - 0.5; v = -s * 50; dir = -s; dirS = dir; } };
 }
 function goHome(s) {
   goingHome = false; mode = "home";
-  tween = { t: 0, dur: .5, x0: s < 0 ? D : W - D, x1: perchX(s), y0: R, y1: R, arc: 70 * S(),
+  tween = { t: 0, dur: .6, x0: s < 0 ? D : W - D, x1: perchX(s), y0: R, y1: R, arc: 70 * S(),
     r0: s < 0 ? 90 : -90, r1: 0, d: -s,
     done() { mode = "perch"; side = s; next(); } };
 }
 function startAir() {
   if (!pending) return;
   current = pending; pending = null;
-  const t = current.trick, d = air.tot * 1000;
+  air.trick = current;
   if (F.sound) { try { const a = new Audio(F.sound); a.volume = F.volume / 100; a.play(); } catch (e) {} }
-  if (t !== "bail") setTimeout(() => pop(TRICKS[t].label + "!"), d * .3);
-  (TRICK_FX[t] || TRICK_FX.kickflip)(d);
+  if (!current.bail) pop(current.label + "!", current.mega ? "mega" : "", air.tot * 1000 * (current.slowmo ? 1.6 : 1.1));
+  if (current.mega) { setTimeout(() => confetti(air ? (air.s > 0 ? W - D - 160 * S() : D + 160 * S()) : W / 2, Hh * .55), air.tot * 450); flash(); }
 }
 function land() {
-  const s = air.s;
-  mode = "ride"; u = s > 0 ? L : 0; v = -s * Math.abs(air.vy); dir = -s; dirS = dir;
+  const s = air.s, t = air.trick;
+  const endFacing = s * Math.cos((t ? t.spin : 180) * Math.PI / 180);
+  mode = "ride"; u = s > 0 ? L : 0; v = -s * Math.abs(air.vy); dir = -s;
+  dirS = Math.sign(endFacing) || dir;
+  fakie = dirS !== dir;
+  board.style.transform = ""; spin.style.transform = "";
   sparks(s > 0 ? W - D : D, R, 8);
   air = null;
   if (current) {
-    const wasBail = current.trick === "bail";
+    const wasBail = current.bail;
     current = null;
-    if (wasBail) crash(); else setTimeout(next, 250);
+    if (wasBail) crash(); else setTimeout(next, 300);
   }
 }
 function crash() {
-  crashed = true; recoverAt = 0;
-  pop("BAIL!", "bail");
-  spin.getAnimations().forEach(a => a.cancel());
-  board.getAnimations().forEach(a => a.cancel());
+  crashed = true; recoverAt = 0; fakie = false;
+  pop("BAIL!", "bail", 1800);
   anim(board, [{ transform: "none", opacity: 1 }, { transform: "translate(-140px,-60px) rotate(-200deg)", opacity: 0 }],
     { duration: 700, easing: "ease-out", fill: "forwards" });
   anim(rat, [{ transform: "translateY(-112px) rotate(178deg)" }, { transform: "translateY(-112px) rotate(166deg)" },
@@ -210,48 +280,23 @@ function recover() {
   next();
 }
 
-// ---------- trick animations (played during the air) ----------
-const anim = (el, kf, o) => el.animate(kf, typeof o === "number" ? { duration: o } : o).finished;
-const FLIP = n => { const k = [{ transform: "scaleY(1)" }, { transform: "scaleY(1)", offset: .2 }];
-  for (let i = 1; i <= n; i++) k.push({ transform: "scaleY(-1)", offset: .2 + (i - .5) * .5 / n }, { transform: "scaleY(1)", offset: .2 + i * .5 / n });
-  k.push({ transform: "scaleY(1)" }); return k; };
-const TRE = n => [{ transform: "rotate(0) scaleY(1)" }, { transform: "rotate(0) scaleY(1)", offset: .18 },
-  { transform: `rotate(${-360 * n}deg) scaleY(-1)`, offset: .45 },
-  { transform: `rotate(${-360 * n}deg) scaleY(1)`, offset: .72 }, { transform: `rotate(${-360 * n}deg) scaleY(1)` }];
-const SPIN = deg => [{ transform: "rotate(0)" }, { transform: "rotate(0)", offset: .12 },
-  { transform: `rotate(${deg}deg)`, offset: .8 }, { transform: `rotate(${deg}deg)` }];
-const GRAB = [{ transform: "none" }, { transform: "translateY(10px) rotate(6deg)", offset: .3 },
-  { transform: "translateY(10px) rotate(6deg)", offset: .7 }, { transform: "none" }];
-
-const TRICK_FX = {
-  ollie(d) { anim(rat, GRAB, d); anim(board, [{ transform: "rotate(0)" }, { transform: "rotate(-10deg)", offset: .3 }, { transform: "rotate(0)" }], d); },
-  kickflip(d) { anim(board, FLIP(1), d); },
-  treflip(d) { anim(board, TRE(1), { duration: d, easing: "ease-in-out" }); anim(rat, GRAB, d); },
-  mctwist(d) { anim(spin, SPIN(-360), { duration: d, easing: "ease-in-out" }); anim(board, FLIP(1), d); },
-  mega(d) {
-    anim(spin, SPIN(-720), { duration: d, easing: "ease-in-out" });
-    anim(board, FLIP(2), d);
-    const s = air ? air.s : 1;
-    setTimeout(() => confetti(s > 0 ? W - D - 160 * S() : D + 160 * S(), Hh * .5), d * .45);
-    flash();
-  },
-  bail(d) { anim(spin, [{ transform: "rotate(0)" }, { transform: "rotate(40deg)", offset: .4 }, { transform: "rotate(150deg)" }], d); }
-};
-
 // ---------- effects ----------
-function pop(text, cls = "") {
+const anim = (el, kf, o) => el.animate(kf, typeof o === "number" ? { duration: o } : o).finished;
+function pop(text, cls = "", ms = 1800) {
   const el = document.createElement("div");
   el.className = "pop " + cls; el.textContent = text;
   const s = air ? air.s : dir;
-  el.style.left = (cls === "bail" ? W / 2 : (s > 0 ? W - D - 230 * S() : D + 230 * S())) + "px";
-  el.style.bottom = (cls === "bail" ? R * .6 : Math.min(Hh - 140, R + sky() * .5)) + "px";
+  el.style.left = (cls === "bail" ? W / 2 : (s > 0 ? W - D - 250 * S() : D + 250 * S())) + "px";
+  el.style.bottom = (cls === "bail" ? R * .6 : Math.min(Hh - 150, R + sky() * .45)) + "px";
   lane.appendChild(el);
+  ms = Math.max(1400, ms);
   anim(el, [
     { transform: "translateX(-50%) scale(.4)", opacity: 0 },
-    { transform: "translateX(-50%) scale(1.15)", opacity: 1, offset: .15 },
-    { transform: "translateX(-50%) translateY(-30px) scale(1)", opacity: 1, offset: .7 },
-    { transform: "translateX(-50%) translateY(-60px) scale(1)", opacity: 0 }
-  ], 1800).then(() => el.remove());
+    { transform: "translateX(-50%) scale(1.15)", opacity: 1, offset: 220 / ms },
+    { transform: "translateX(-50%) scale(1)", opacity: 1, offset: 380 / ms },
+    { transform: "translateX(-50%) translateY(-20px) scale(1)", opacity: 1, offset: 1 - 400 / ms },
+    { transform: "translateX(-50%) translateY(-50px) scale(1)", opacity: 0 }
+  ], ms).then(() => el.remove());
 }
 function sparks(x, y, n) {
   for (let i = 0; i < n; i++) {
@@ -263,21 +308,21 @@ function sparks(x, y, n) {
       { duration: 350 + Math.random() * 300, easing: "ease-out" }).then(() => s.remove());
   }
 }
-function confetti(cx, cy, n = 50) {
+function confetti(cx, cy, n = 60) {
   const cols = [F.accent, F.accent2, "#ffe34d", "#5cff8a", "#9b5cff", "#fff"];
   for (let i = 0; i < n; i++) {
     const c = document.createElement("div"); c.className = "conf";
     c.style.background = cols[i % cols.length]; c.style.left = cx + "px"; c.style.bottom = cy + "px";
     lane.appendChild(c);
-    const a = Math.random() * Math.PI * 2, d = 120 + Math.random() * 280;
+    const a = Math.random() * Math.PI * 2, d = 120 + Math.random() * 300;
     anim(c, [{ transform: "translate(0,0) rotate(0)", opacity: 1 },
-      { transform: `translate(${Math.cos(a) * d}px,${-Math.sin(a) * d + 180}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }],
-      { duration: 1400 + Math.random() * 900, easing: "cubic-bezier(.1,.7,.4,1)" }).then(() => c.remove());
+      { transform: `translate(${Math.cos(a) * d}px,${-Math.sin(a) * d + 200}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }],
+      { duration: 1800 + Math.random() * 1000, easing: "cubic-bezier(.1,.7,.4,1)" }).then(() => c.remove());
   }
 }
 function flash() {
   const f = document.createElement("div"); f.className = "flash"; lane.appendChild(f);
-  anim(f, [{ opacity: 0 }, { opacity: .5, offset: .15 }, { opacity: 0 }], 900).then(() => f.remove());
+  anim(f, [{ opacity: 0 }, { opacity: .45, offset: .15 }, { opacity: 0 }], 1100).then(() => f.remove());
 }
 
 // ---------- banner + queue ----------
@@ -303,25 +348,25 @@ function next() {
   if (pending || current || crashed || mode === "drop" || mode === "home") return;
   const j = queue.shift();
   if (!j) { if (F.idleMode !== "ride" && mode !== "perch") goingHome = true; return; }
-  if (!TRICKS[j.trick]) j.trick = "kickflip";
   goingHome = false;
-  pending = j;
-  showBanner(j.name, j.sub(TRICKS[j.trick].label), j.msg);
+  pending = j.trick;
+  showBanner(j.name, j.sub(esc(j.trick.label)), j.msg);
   if (mode === "perch") dropIn();
 }
 
-function trickForAmount(amt) {
-  if (amt >= F.tier3) return "mega";
-  if (amt >= F.tier2) return "mctwist";
-  if (amt >= F.tier1) return "treflip";
-  return "kickflip";
+function tierFor(amt) {
+  if (amt >= F.tier4) return "t4";
+  if (amt >= F.tier3) return "t3";
+  if (amt >= F.tier2) return "t2";
+  if (amt >= F.tier1) return "t1";
+  return "t0";
 }
 const money = a => `${esc(F.currency)}${(+a).toFixed(2).replace(/\.00$/, "")}`;
 
 // ---------- StreamElements wiring ----------
 window.addEventListener("onWidgetLoad", obj => {
   F = Object.assign(F, (obj.detail && obj.detail.fieldData) || {});
-  ["tier1", "tier2", "tier3", "chatCooldown", "bailChance", "size", "volume", "bannerSeconds", "rampHeight", "rampOpacity"].forEach(k => F[k] = +F[k]);
+  ["tier1", "tier2", "tier3", "tier4", "chatCooldown", "bailChance", "size", "volume", "bannerSeconds", "rampHeight", "rampOpacity", "hangTime"].forEach(k => F[k] = +F[k]);
   applyFields();
   if (F.idleMode === "ride" && mode === "perch") dropIn();
 });
@@ -329,23 +374,23 @@ window.addEventListener("onWidgetLoad", obj => {
 window.addEventListener("onEventReceived", obj => {
   const d = obj.detail || {}, l = d.listener, ev = d.event || {};
   if (l === "event:test" && ev.listener === "widget-button") {
-    return play({ trick: ev.value || "kickflip", name: "Test Rat", sub: L => `test · <b>${L}</b>` });
+    return play({ trick: makeTrick(ev.value), name: "Test Rat", sub: L => `test · <b>${L}</b>` });
   }
   const name = esc(ev.name || ev.displayName || "someone");
   switch (l) {
     case "superchat-latest":
     case "tip-latest":
-      return play({ trick: trickForAmount(+ev.amount || 0), name, msg: ev.message, sub: L => `${money(ev.amount || 0)} · <b>${L}</b>` });
+      return play({ trick: makeTrick(tierFor(+ev.amount || 0)), name, msg: ev.message, sub: L => `${money(ev.amount || 0)} · <b>${L}</b>` });
     case "cheer-latest":
-      return play({ trick: trickForAmount((+ev.amount || 0) / 100), name, msg: ev.message, sub: L => `${+ev.amount} bits · <b>${L}</b>` });
+      return play({ trick: makeTrick(tierFor((+ev.amount || 0) / 100)), name, msg: ev.message, sub: L => `${+ev.amount} bits · <b>${L}</b>` });
     case "sponsor-latest":
-      return play({ trick: F.memberTrick, name, sub: L => `new member · <b>${L}</b>` });
+      return play({ trick: makeTrick(F.memberTrick), name, sub: L => `new member · <b>${L}</b>` });
     case "subscriber-latest":
-      return play({ trick: F.subscriberTrick, name, sub: L => `subscribed · <b>${L}</b>` });
+      return play({ trick: makeTrick(F.subscriberTrick), name, sub: L => `subscribed · <b>${L}</b>` });
     case "follower-latest":
-      return play({ trick: F.followerTrick, name, sub: L => `followed · <b>${L}</b>` });
+      return play({ trick: makeTrick(F.followerTrick), name, sub: L => `followed · <b>${L}</b>` });
     case "raid-latest":
-      return play({ trick: "mega", name, sub: L => `raid x${+ev.amount || 0} · <b>${L}</b>` });
+      return play({ trick: makeTrick("t4"), name, sub: L => `raid x${+ev.amount || 0} · <b>${L}</b>` });
     case "message": {
       const data = ev.data || {};
       const text = String(data.text || ev.renderedText || "").trim().toLowerCase();
@@ -355,8 +400,8 @@ window.addEventListener("onEventReceived", obj => {
       lastChat = now;
       const who = esc(data.displayName || data.nick || "chat");
       const bail = Math.random() * 100 < F.bailChance;
-      const pick = ["ollie", "kickflip", "treflip"][Math.floor(Math.random() * 3)];
-      return play({ trick: bail ? "bail" : pick, name: who, sub: L => bail ? `called it… <b>${L}</b>` : `called a <b>${L}</b>` });
+      const trick = makeTrick(bail ? "bail" : pick(["grab", "t0", "t0", "t1"]));
+      return play({ trick, name: who, sub: L => bail ? `called it… <b>${L}</b>` : `called a <b>${L}</b>` });
     }
   }
 });

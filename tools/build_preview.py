@@ -28,12 +28,13 @@ h1{{font:700 26px system-ui;margin:0 0 4px}} p{{margin:0 0 14px;color:#bba9d2;fo
 <p>The rat waits on the deck. Click to fire fake stream events — bigger superchats get bigger air. Click a few fast for a combo. In StreamElements these come from real superchats, members and chat.</p>
 <div class="stage">{html}</div>
 <div class="btns">
-<button data-l="sponsor-latest">New member</button>
 <button data-l="subscriber-latest">New subscriber</button>
+<button data-l="sponsor-latest">New member</button>
 <button data-l="superchat-latest" data-a="2">Superchat A$2</button>
-<button data-l="superchat-latest" data-a="10">Superchat A$10</button>
-<button data-l="superchat-latest" data-a="25">Superchat A$25</button>
-<button data-l="superchat-latest" data-a="60">Superchat A$60</button>
+<button data-l="superchat-latest" data-a="5">A$5 · 360s</button>
+<button data-l="superchat-latest" data-a="20">A$20 · 540s</button>
+<button data-l="superchat-latest" data-a="50">A$50 · 720s</button>
+<button data-l="superchat-latest" data-a="100">A$100 · THE 900</button>
 <button data-l="message">Chat: !kickflip</button>
 <button data-bail>Force a bail</button>
 </div>
