@@ -1,0 +1,41 @@
+:root{--a:#ff2bd6;--b:#27f5ff;--rat:#8a7b96;--s:1}
+html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;overflow:hidden}
+#lane{position:relative;width:100%;height:100%;overflow:hidden;font-family:"Space Mono",monospace}
+#ramps{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#rider{position:absolute;left:0;top:0;width:160px;height:150px;transform-origin:80px 150px;will-change:transform;z-index:2}
+.jump,.spin{position:absolute;inset:0}
+.spin{transform-origin:50% 72%}
+.rat{position:absolute;left:0;top:0;width:160px;height:120px;transform-origin:50% 100%;animation:bob .45s infinite alternate ease-in-out}
+.rat svg,.board svg{width:100%;height:100%;display:block;overflow:visible}
+.board{position:absolute;left:0;bottom:0;width:160px;height:30px;transform-origin:50% 45%}
+@keyframes bob{to{transform:translateY(-3px) rotate(-1.5deg)}}
+
+#banner{position:absolute;top:10px;left:50%;transform:translateX(-50%) scale(.6);opacity:0;
+  min-width:340px;max-width:92%;text-align:center;padding:14px 26px 16px;border-radius:18px;
+  background:rgba(11,6,18,.9);border:3px solid var(--a);
+  box-shadow:0 0 0 3px rgba(39,245,255,.35),0 0 34px rgba(255,43,214,.55);color:#fff;z-index:5}
+.bName{font-family:"Rubik Mono One","Arial Black",Impact,sans-serif;font-size:34px;color:var(--b);
+  text-shadow:-2px 0 var(--a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bSub{font-size:22px;margin-top:6px;letter-spacing:.08em}
+.bSub b{color:var(--a)}
+.bMsg{font-size:18px;margin-top:6px;opacity:.85;max-height:2.8em;overflow:hidden}
+.bMsg:empty{display:none}
+
+.pop{position:absolute;transform:translateX(-50%);font-family:"Rubik Mono One","Arial Black",Impact,sans-serif;
+  font-size:calc(30px * var(--s));color:#fff;white-space:nowrap;pointer-events:none;z-index:4;
+  text-shadow:-3px 0 var(--a),3px 0 var(--b),0 0 18px rgba(255,43,214,.8)}
+.pop.bail{color:#ffe34d;font-size:calc(44px * var(--s))}
+.rail{position:absolute;bottom:18px;z-index:1;opacity:0}
+.rail .bar{position:absolute;left:0;right:0;top:0;height:9px;border-radius:5px;
+  background:linear-gradient(#f2f4f8,#8d93a1);box-shadow:0 0 12px rgba(39,245,255,.6)}
+.rail .leg{position:absolute;top:6px;bottom:0;width:8px;background:#6e7482}
+.spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#ffe34d;
+  box-shadow:0 0 8px #ffb300,0 0 2px #fff;pointer-events:none;z-index:3}
+.conf{position:absolute;width:10px;height:16px;border-radius:2px;pointer-events:none;z-index:3}
+.flash{position:absolute;inset:0;background:radial-gradient(circle,#fff,var(--a) 40%,transparent 75%);pointer-events:none;z-index:1;opacity:0}
+.board img{width:100%;height:100%;object-fit:contain;display:block}
+/* custom art mode */
+.art .rat{width:190px;height:190px;left:-15px;top:auto;bottom:24px;animation-duration:.6s}
+.art .rat img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;display:none}
+.art .rat[data-pose="ride"] .p-ride,.art .rat[data-pose="idle"] .p-idle,.art .rat[data-pose="air"] .p-air{display:block}
+.art-board .board{height:42px;bottom:-4px;left:-8px;width:176px}

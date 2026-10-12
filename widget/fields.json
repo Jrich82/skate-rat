@@ -1,0 +1,235 @@
+{
+  "tier1": {
+    "type": "number",
+    "label": "Superchat/tip amount for a 360 FLIP",
+    "value": 5,
+    "group": "Trick tiers"
+  },
+  "tier2": {
+    "type": "number",
+    "label": "Amount for a 540 McTWIST",
+    "value": 20,
+    "group": "Trick tiers"
+  },
+  "tier3": {
+    "type": "number",
+    "label": "Amount for the MEGA 720",
+    "value": 50,
+    "group": "Trick tiers"
+  },
+  "currency": {
+    "type": "text",
+    "label": "Currency symbol shown",
+    "value": "A$",
+    "group": "Trick tiers"
+  },
+  "memberTrick": {
+    "type": "dropdown",
+    "label": "New member trick",
+    "value": "kickflip",
+    "group": "Trick tiers",
+    "options": {
+      "ollie": "Air",
+      "kickflip": "Kickflip",
+      "treflip": "360 Flip",
+      "mctwist": "540 McTwist",
+      "mega": "Mega 720"
+    }
+  },
+  "subscriberTrick": {
+    "type": "dropdown",
+    "label": "New subscriber trick",
+    "value": "ollie",
+    "group": "Trick tiers",
+    "options": {
+      "ollie": "Air",
+      "kickflip": "Kickflip",
+      "treflip": "360 Flip",
+      "mctwist": "540 McTwist",
+      "mega": "Mega 720"
+    }
+  },
+  "followerTrick": {
+    "type": "dropdown",
+    "label": "New follower trick (Twitch/Kick)",
+    "value": "ollie",
+    "group": "Trick tiers",
+    "options": {
+      "ollie": "Air",
+      "kickflip": "Kickflip",
+      "treflip": "360 Flip",
+      "mctwist": "540 McTwist",
+      "mega": "Mega 720"
+    }
+  },
+  "chatCommand": {
+    "type": "text",
+    "label": "Chat command (blank = off)",
+    "value": "!kickflip",
+    "group": "Chat"
+  },
+  "chatCooldown": {
+    "type": "number",
+    "label": "Chat command cooldown (seconds)",
+    "value": 30,
+    "group": "Chat"
+  },
+  "bailChance": {
+    "type": "slider",
+    "label": "Chance the rat bails on a chat trick (%)",
+    "value": 15,
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "group": "Chat"
+  },
+  "idleMode": {
+    "type": "dropdown",
+    "label": "When idle",
+    "value": "perch",
+    "options": {
+      "perch": "Chill on the deck until an event",
+      "ride": "Keep carving the pipe"
+    },
+    "group": "Halfpipe"
+  },
+  "rampHeight": {
+    "type": "number",
+    "label": "Ramp height (px)",
+    "value": 220,
+    "group": "Halfpipe"
+  },
+  "rampOpacity": {
+    "type": "slider",
+    "label": "Ramp opacity (%)",
+    "value": 85,
+    "min": 0,
+    "max": 100,
+    "step": 5,
+    "group": "Halfpipe"
+  },
+  "rampText": {
+    "type": "text",
+    "label": "Text on the ramps",
+    "value": "RATZ",
+    "group": "Halfpipe"
+  },
+  "size": {
+    "type": "slider",
+    "label": "Rat size (%)",
+    "value": 100,
+    "min": 40,
+    "max": 250,
+    "step": 5,
+    "group": "Look"
+  },
+  "accent": {
+    "type": "colorpicker",
+    "label": "Hoodie & deck color",
+    "value": "#ff2bd6",
+    "group": "Look"
+  },
+  "accent2": {
+    "type": "colorpicker",
+    "label": "Cap & wheels color",
+    "value": "#27f5ff",
+    "group": "Look"
+  },
+  "ratColor": {
+    "type": "colorpicker",
+    "label": "Fur color",
+    "value": "#8a7b96",
+    "group": "Look"
+  },
+  "ratImage": {
+    "type": "image-input",
+    "label": "Rat art: riding pose (rat-ride.png)",
+    "value": "",
+    "group": "Art"
+  },
+  "ratIdleImage": {
+    "type": "image-input",
+    "label": "Rat art: chilling pose (rat-idle.png)",
+    "value": "",
+    "group": "Art"
+  },
+  "ratAirImage": {
+    "type": "image-input",
+    "label": "Rat art: air pose (rat-air.png)",
+    "value": "",
+    "group": "Art"
+  },
+  "boardImage": {
+    "type": "image-input",
+    "label": "Board art (board.png)",
+    "value": "",
+    "group": "Art"
+  },
+  "showBanner": {
+    "type": "dropdown",
+    "label": "Show name banner",
+    "value": "yes",
+    "options": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "group": "Look"
+  },
+  "bannerSeconds": {
+    "type": "number",
+    "label": "Banner time (seconds)",
+    "value": 5,
+    "group": "Look"
+  },
+  "sound": {
+    "type": "sound-input",
+    "label": "Trick sound (optional)",
+    "value": "",
+    "group": "Sound"
+  },
+  "volume": {
+    "type": "slider",
+    "label": "Volume",
+    "value": 50,
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "group": "Sound"
+  },
+  "testOllie": {
+    "type": "button",
+    "label": "Test: Ollie",
+    "value": "ollie",
+    "group": "Test"
+  },
+  "testKickflip": {
+    "type": "button",
+    "label": "Test: Kickflip",
+    "value": "kickflip",
+    "group": "Test"
+  },
+  "testTre": {
+    "type": "button",
+    "label": "Test: 360 Flip",
+    "value": "treflip",
+    "group": "Test"
+  },
+  "testMcTwist": {
+    "type": "button",
+    "label": "Test: 540 McTwist",
+    "value": "mctwist",
+    "group": "Test"
+  },
+  "testMega": {
+    "type": "button",
+    "label": "Test: Mega backflip",
+    "value": "mega",
+    "group": "Test"
+  },
+  "testBail": {
+    "type": "button",
+    "label": "Test: Bail",
+    "value": "bail",
+    "group": "Test"
+  }
+}
