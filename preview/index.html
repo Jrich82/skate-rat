@@ -125,7 +125,8 @@ let F = {
   chatCommand: "!kickflip", chatCooldown: 30, bailChance: 15,
   idleMode: "perch", rampHeight: 220, rampOpacity: 85, rampText: "RATZ",
   hangTime: 100, size: 100, accent: "#ff2bd6", accent2: "#27f5ff", ratColor: "#8a7b96",
-  ratImage: "", ratIdleImage: "", ratAirImage: "", boardImage: "",
+  ratImage: "https://raw.githubusercontent.com/Jrich82/skate-rat/main/art/rat-ride.png", ratIdleImage: "https://raw.githubusercontent.com/Jrich82/skate-rat/main/art/rat-idle.png",
+  ratAirImage: "https://raw.githubusercontent.com/Jrich82/skate-rat/main/art/rat-air.png", boardImage: "https://raw.githubusercontent.com/Jrich82/skate-rat/main/art/board.png",
   showBanner: "yes", bannerSeconds: 6, sound: "", volume: 50
 };
 
@@ -188,7 +189,7 @@ const queue = [];
 let lastChat = 0, last = performance.now();
 
 const S = () => F.size / 100;
-const sky = () => Math.max(60, Hh - R - BASE - 140 * S());
+const sky = () => Math.max(60, Math.min(Hh - R - BASE - 140 * S(), 560 * S()));
 
 function applyFields() {
   const r = document.documentElement.style;
@@ -483,7 +484,8 @@ const money = a => `${esc(F.currency)}${(+a).toFixed(2).replace(/\.00$/, "")}`;
 
 // ---------- StreamElements wiring ----------
 window.addEventListener("onWidgetLoad", obj => {
-  F = Object.assign(F, (obj.detail && obj.detail.fieldData) || {});
+  const fd = (obj.detail && obj.detail.fieldData) || {};
+  for (const k in fd) if (fd[k] !== "" && fd[k] != null) F[k] = fd[k];   // blank settings keep the defaults
   ["tier1", "tier2", "tier3", "tier4", "chatCooldown", "bailChance", "size", "volume", "bannerSeconds", "rampHeight", "rampOpacity", "hangTime"].forEach(k => F[k] = +F[k]);
   applyFields();
   if (F.idleMode === "ride" && mode === "perch") dropIn();

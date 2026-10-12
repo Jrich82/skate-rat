@@ -161,26 +161,26 @@
   },
   "ratImage": {
     "type": "image-input",
-    "label": "Rat art: riding pose (rat-ride.png)",
-    "value": "",
+    "label": "Rat art: riding pose (already set, replace only to change art)",
+    "value": "https://raw.githubusercontent.com/Jrich82/skate-rat/main/art/rat-ride.png",
     "group": "Art"
   },
   "ratIdleImage": {
     "type": "image-input",
-    "label": "Rat art: chilling pose (rat-idle.png)",
-    "value": "",
+    "label": "Rat art: chilling pose (already set, replace only to change art)",
+    "value": "https://raw.githubusercontent.com/Jrich82/skate-rat/main/art/rat-idle.png",
     "group": "Art"
   },
   "ratAirImage": {
     "type": "image-input",
-    "label": "Rat art: air pose (rat-air.png)",
-    "value": "",
+    "label": "Rat art: air pose (already set, replace only to change art)",
+    "value": "https://raw.githubusercontent.com/Jrich82/skate-rat/main/art/rat-air.png",
     "group": "Art"
   },
   "boardImage": {
     "type": "image-input",
-    "label": "Board art (board.png)",
-    "value": "",
+    "label": "Board art (already set, replace only to change art)",
+    "value": "https://raw.githubusercontent.com/Jrich82/skate-rat/main/art/board.png",
     "group": "Art"
   },
   "showBanner": {

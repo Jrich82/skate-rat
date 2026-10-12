@@ -24,22 +24,27 @@ At the peak of each air he rotates upright, so spins and flips read clearly. The
 
 Open `preview/index.html` in a browser and click the fake event buttons.
 
-## Install in StreamElements
+## Install
 
-1. StreamElements dashboard → **Streaming tools → Overlays**. Open your overlay or make a new one.
-2. **+ → Static/Custom → Custom widget**, then **Open editor**.
-3. Paste the files from `widget/` into the matching tabs: `widget.html` → HTML, `widget.css` → CSS, `widget.js` → JS, `fields.json` → FIELDS. Click **Done**.
-4. In the widget settings, under **Art**, upload the four PNGs from `art/`:
-   - Riding pose → `rat-ride.png`
-   - Chilling pose → `rat-idle.png`
-   - Air pose → `rat-air.png`
-   - Board → `board.png`
+### Easiest: one link (for the streamer)
 
-   If you skip this, the widget uses a simple built-in cartoon rat.
-5. Size the widget to about **1080 × 720** and place it over the bottom of the camera.
-6. Use the **Test** buttons in the settings to try each trick.
+1. Sign in at [streamelements.com](https://streamelements.com) with your **YouTube** account.
+2. Click the Skate Rat install link you were sent. StreamElements imports the overlay into **My Overlays**.
+3. Open it, click **Launch overlay** (or copy its URL) and add that URL to OBS as a **Browser Source**: width 1080, height 1920 for a vertical stream.
 
-The overlay is already a browser source in OBS if he uses StreamElements overlays. A new overlay goes in OBS as a Browser Source using its overlay URL.
+The art, tricks and settings are already set up. To try it, open the overlay, click the widget and use the **Test** buttons.
+
+### Making the install link (one-time, for whoever sets it up)
+
+1. Sign in to StreamElements with a YouTube account. Install links are tied to a platform, so make it on the same platform the streamer uses.
+2. **Overlays → New overlay**, sized to match the stream (1080 × 1920 vertical).
+3. **+ → Static/Custom → Custom widget → Open editor**. Paste `widget/widget.html`, `widget.css`, `widget.js` and `fields.json` into the matching tabs, then click **Done**.
+4. Stretch the widget across the bottom of the canvas and test it.
+5. Save. Then, from the overlay's menu in **My Overlays**, use **Share** to get the install link.
+
+### Manual install (no link)
+
+Do steps 2–4 above in the streamer's own StreamElements account. The art loads automatically from this repo, so nothing needs uploading.
 
 ## Repo layout
 
@@ -53,6 +58,7 @@ tools/    build_preview.py, cutout.py
 ## Development
 
 - Edit the files in `widget/`, then rebuild the demo with `python tools/build_preview.py`.
+- The widget loads its art from `art/` on this repo's `main` branch. Changing those PNGs and pushing updates every installed copy. Renaming or deleting them breaks it.
 - New art: make each pose a side view **facing right** with feet at the bottom. Generate the board separately so it can flip on its own.
 - AI image tools often paint a fake checkerboard instead of real transparency. `python tools/cutout.py in.jpg art/rat-ride.png` removes it; add `--fill-holes` for solid shapes like the board. Needs `numpy`, `scipy` and `Pillow`.
 
